@@ -1,8 +1,29 @@
 import os
+import requests
 
-print("開始測試")
+TOKEN = os.getenv("LINE_TOKEN")
+USER_ID = os.getenv("LINE_USER_ID")
 
-print("TOKEN =", os.getenv("LINE_TOKEN"))
-print("USER_ID =", os.getenv("LINE_USER_ID"))
+headers = {
+    "Authorization": f"Bearer {TOKEN}",
+    "Content-Type": "application/json"
+}
 
-print("測試完成")
+payload = {
+    "to": USER_ID,
+    "messages": [
+        {
+            "type": "text",
+            "text": "GitHub 成功連接 LINE 🎉"
+        }
+    ]
+}
+
+response = requests.post(
+    "https://api.line.me/v2/bot/message/push",
+    headers=headers,
+    json=payload
+)
+
+print(response.status_code)
+print(response.text)
