@@ -13,3 +13,41 @@ stocks = {
     "2330.TW": "2330 台積電",
     "3665.TW": "3665 貿聯-KY"
 }
+
+message = "📈 股票監控報告\n\n"
+
+for code, name in stocks.items():
+    try:
+        stock = yf.Ticker(code)
+        price = stock.history(period="1d")["Close"].iloc[-1]
+
+        message += f"{name}\n"
+        message += f"目前價格：{price:.2f}\n\n"
+
+    except Exception as e:
+        message += f"{name}\n"
+        message += "資料取得失敗\n\n"
+
+headers = {
+    "Authorization": f"Bearer {TOKEN}",
+    "Content-Type": "application/json"
+}
+
+payload = {
+    "to": USER_ID,
+    "messages": [
+        {
+            "type": "text",
+            "text": message
+        }
+    ]
+}
+
+response = requests.post(
+    "https://api.line.me/v2/bot/message/push",
+    headers=headers,
+    json=payload
+)
+
+print(response.status_code)
+print(response.text)
