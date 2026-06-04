@@ -3,6 +3,8 @@ import requests
 import yfinance as yf
 from datetime import datetime
 
+print("=== 新版程式 v3 ===")
+
 TOKEN = os.getenv("LINE_TOKEN")
 USER_ID = os.getenv("LINE_USER_ID")
 
@@ -20,30 +22,32 @@ for code, info in stocks.items():
     try:
 
         stock = yf.Ticker(code)
-        hist = stock.history(period="1mo")
+        hist = stock.history(period="5d")
 
         if hist.empty:
             raise Exception("查無資料")
 
-        close_price = float(hist["Close"].dropna().iloc[-1])
+        close_data = hist["Close"]
+
+        # 處理新版 yfinance 可能回傳 DataFrame
+        if hasattr(close_data, "columns"):
+            close_data = close_data.iloc[:, 0]
+
+        close_price = close_data.dropna().iloc[-1]
+
+        if hasattr(close_price, "iloc"):
+            close_price = close_price.iloc[0]
+
+        close_price = float(close_price)
 
         cost = info["cost"]
-
         profit = ((close_price - cost) / cost) * 100
-
-        if profit >= 20:
-            advice = "🟢 強勢續抱"
-        elif profit >= 0:
-            advice = "🟡 持有觀察"
-        else:
-            advice = "🔴 注意風險"
 
         message += (
             f"{info['name']}\n"
             f"收盤價：{close_price:.2f}\n"
-            f"持有成本：{cost:.2f}\n"
+            f"成本：{cost:.2f}\n"
             f"報酬率：{profit:.2f}%\n"
-            f"建議：{advice}\n"
             f"----------------------\n\n"
         )
 
