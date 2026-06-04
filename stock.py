@@ -27,17 +27,22 @@ for code, info in stocks.items():
             progress=False
         )
 
-        close = float(df["Close"].iloc[-1])
+  close_series = df["Close"]
 
-        ma20 = float(df["Close"].rolling(20).mean().iloc[-1])
-        ma60 = float(df["Close"].rolling(60).mean().iloc[-1])
-        ma120 = float(df["Close"].rolling(120).mean().iloc[-1])
+if isinstance(close_series, pd.DataFrame):
+    close_series = close_series.iloc[:, 0]
 
-        rsi = float(
-            RSIIndicator(df["Close"]).rsi().iloc[-1]
-        )
+close_price = float(close_series.iloc[-1])
 
-        macd_obj = MACD(df["Close"])
+ma20 = float(close_series.rolling(20).mean().iloc[-1])
+ma60 = float(close_series.rolling(60).mean().iloc[-1])
+ma120 = float(close_series.rolling(120).mean().iloc[-1])
+
+rsi = float(
+    RSIIndicator(close_series).rsi().iloc[-1]
+)
+
+macd_obj = MACD(close_series)
 
         macd_line = float(macd_obj.macd().iloc[-1])
         signal_line = float(macd_obj.macd_signal().iloc[-1])
@@ -50,7 +55,7 @@ for code, info in stocks.items():
         if ma60 > ma120:
             score += 15
 
-        if close > ma20:
+       if close_price > ma20:
             score += 10
 
         if 50 <= rsi <= 70:
@@ -70,11 +75,11 @@ for code, info in stocks.items():
 
         cost = info["cost"]
 
-        profit = ((close - cost) / cost) * 100
+        profit = ((close_price - cost) / cost) * 100
 
         message += (
             f"{info['name']}\n"
-            f"收盤：{close:.2f}\n"
+            f"收盤：{close_price:.2f}\n"
             f"成本：{cost:.2f}\n"
             f"報酬率：{profit:.2f}%\n"
             f"20MA：{ma20:.2f}\n"
