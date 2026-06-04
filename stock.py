@@ -18,8 +18,7 @@ message = f"📊 ETF AI盤後分析\n日期：{datetime.now().strftime('%Y-%m-%d
 
 for code, info in stocks.items():
 
-```
-try:
+    try:
 
     stock = yf.Ticker(code)
     hist = stock.history(period="6mo")
