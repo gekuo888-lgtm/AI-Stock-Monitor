@@ -1,24 +1,2 @@
-name: Stock Monitor
-
-on:
-  workflow_dispatch:
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-
-      - name: Install packages
-        run: |
-          pip install -r requirements.txt
-
-      - name: Send LINE Message
-        env:
-          LINE_TOKEN: ${{ secrets.LINE_TOKEN }}
-          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
-        run: |
-          python stock.py
+schedule:
+  - cron: '40 6 * * 1-5'
