@@ -1,7 +1,6 @@
 import os
 import requests
 import yfinance as yf
-import pandas as pd
 from ta.momentum import RSIIndicator
 from datetime import datetime
 
@@ -28,12 +27,9 @@ try:
     if hist.empty:
         raise Exception("查無資料")
 
-    close_series = hist["Close"]
+    close_series = hist["Close"].dropna()
 
-    if hasattr(close_series, "columns"):
-        close_series = close_series.iloc[:, 0]
-
-    close_price = float(close_series.dropna().iloc[-1])
+    close_price = float(close_series.iloc[-1])
 
     ma20 = float(close_series.rolling(20).mean().iloc[-1])
     ma60 = float(close_series.rolling(60).mean().iloc[-1])
@@ -111,6 +107,4 @@ json=payload
 
 print(response.status_code)
 print(response.text)
-
-```
-```
+print(message)
