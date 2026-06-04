@@ -1,32 +1,98 @@
 import os
 import requests
 import yfinance as yf
+import pandas as pd
+from ta.momentum import RSIIndicator
+from ta.trend import MACD
+from datetime import datetime
 
 TOKEN = os.getenv("LINE_TOKEN")
 USER_ID = os.getenv("LINE_USER_ID")
 
 stocks = {
-    "0050.TW": "0050 元大台灣50",
-    "0052.TW": "0052 富邦科技",
-    "0056.TW": "0056 元大高股息",
-    "00919.TW": "00919 群益台灣精選高息"
+    "0050.TW": {"name": "0050 元大台灣50", "cost": 84.81},
+    "0052.TW": {"name": "0052 富邦科技", "cost": 49.82},
+    "0056.TW": {"name": "0056 元大高股息", "cost": 38.24},
+    "00919.TW": {"name": "00919 群益台灣精選高息", "cost": 23.44},
 }
 
-message = "📊 ETF盤後報告\n\n"
+message = f"📊 ETF盤後AI分析\n日期：{datetime.now().strftime('%Y-%m-%d')}\n\n"
 
-for code, name in stocks.items():
-
+for code, info in stocks.items():
     try:
-        stock = yf.Ticker(code)
+        df = yf.download(
+            code,
+            period="1y",
+            auto_adjust=True,
+            progress=False
+        )
 
-        price = stock.history(period="1d")["Close"].iloc[-1]
+        close = float(df["Close"].iloc[-1])
 
-        message += f"{name}\n"
-        message += f"收盤價：{price:.2f}\n\n"
+        ma20 = float(df["Close"].rolling(20).mean().iloc[-1])
+        ma60 = float(df["Close"].rolling(60).mean().iloc[-1])
+        ma120 = float(df["Close"].rolling(120).mean().iloc[-1])
 
-    except Exception:
-        message += f"{name}\n"
-        message += "資料取得失敗\n\n"
+        rsi = float(
+            RSIIndicator(df["Close"]).rsi().iloc[-1]
+        )
+
+        macd_obj = MACD(df["Close"])
+
+        macd_line = float(macd_obj.macd().iloc[-1])
+        signal_line = float(macd_obj.macd_signal().iloc[-1])
+
+        score = 50
+
+        if ma20 > ma60:
+            score += 15
+
+        if ma60 > ma120:
+            score += 15
+
+        if close > ma20:
+            score += 10
+
+        if 50 <= rsi <= 70:
+            score += 10
+
+        if macd_line > signal_line:
+            score += 20
+
+        if score >= 90:
+            advice = "🟢 強勢續抱"
+        elif score >= 75:
+            advice = "🟢 續抱"
+        elif score >= 60:
+            advice = "🟡 觀察"
+        else:
+            advice = "🔴 減碼觀察"
+
+        cost = info["cost"]
+
+        profit = ((close - cost) / cost) * 100
+
+        message += (
+            f"{info['name']}\n"
+            f"收盤：{close:.2f}\n"
+            f"成本：{cost:.2f}\n"
+            f"報酬率：{profit:.2f}%\n"
+            f"20MA：{ma20:.2f}\n"
+            f"60MA：{ma60:.2f}\n"
+            f"120MA：{ma120:.2f}\n"
+            f"RSI：{rsi:.1f}\n"
+            f"AI評分：{score}/100\n"
+            f"建議：{advice}\n"
+            f"----------------\n\n"
+        )
+
+    except Exception as e:
+        message += (
+            f"{info['name']}\n"
+            f"資料取得失敗\n"
+            f"錯誤：{str(e)}\n"
+            f"----------------\n\n"
+        )
 
 headers = {
     "Authorization": f"Bearer {TOKEN}",
@@ -38,7 +104,7 @@ payload = {
     "messages": [
         {
             "type": "text",
-            "text": message
+            "text": message[:5000]
         }
     ]
 }
