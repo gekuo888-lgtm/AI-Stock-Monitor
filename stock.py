@@ -41,12 +41,22 @@ ma120 = float(close_series.rolling(120).mean().iloc[-1])
 rsi = float(
     RSIIndicator(close_series).rsi().iloc[-1]
 )
-
+print(type(close_series))
+print(type(macd_obj.macd()))
+print(type(macd_obj.macd_signal()))
 macd_obj = MACD(close_series)
 
-        macd_line = float(macd_obj.macd().iloc[-1])
-        signal_line = float(macd_obj.macd_signal().iloc[-1])
+       macd_line = macd_obj.macd()
+signal_line = macd_obj.macd_signal()
 
+if isinstance(macd_line, pd.DataFrame):
+    macd_line = macd_line.iloc[:, 0]
+
+if isinstance(signal_line, pd.DataFrame):
+    signal_line = signal_line.iloc[:, 0]
+
+macd_line = float(macd_line.iloc[-1])
+signal_line = float(signal_line.iloc[-1])
         score = 50
 
         if ma20 > ma60:
