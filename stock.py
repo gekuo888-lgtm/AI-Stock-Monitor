@@ -26,7 +26,15 @@ for code, info in stocks.items():
             auto_adjust=True,
             progress=False
         )
+print("==============")
+print(code)
+print(type(df))
+print(df.columns)
 
+close_series = df["Close"]
+
+print(type(close_series))
+print(close_series.tail())
   close_series = df["Close"]
 
 if isinstance(close_series, pd.DataFrame):
@@ -100,12 +108,17 @@ signal_line = float(signal_line.iloc[-1])
             f"建議：{advice}\n"
             f"----------------\n\n"
         )
+except Exception as e:
 
-    except Exception as e:
-        message += (
-            f"{info['name']}\n"
-            f"資料取得失敗\n"
-            f"錯誤：{str(e)}\n"
+    import traceback
+
+    print(traceback.format_exc())
+
+    message += (
+        f"{info['name']}\n"
+        f"資料取得失敗\n"
+   import traceback
+print(traceback.format_exc())
             f"----------------\n\n"
         )
 
